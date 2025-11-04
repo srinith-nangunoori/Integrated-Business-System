@@ -53,36 +53,37 @@ CREATE TABLE Employee (
 CREATE TABLE Works(
     E_id INT REFERENCES Employee(E_id),
     D_id INT REFERENCES Department(D_id),
-    work_date DATE default current_date(),
+    work_date DATE default CURRENT_DATE, 
     PRIMARY KEY (E_id, D_id, work_date)
 );
 
-CREATE TABLE Buys(
-    Bill_id SERIAL ,
+CREATE TABLE Buys_Items (
+    Bill_id INT REFERENCES Buys(Bill_id),
     product_name VARCHAR(100) REFERENCES Product(product_name),
-    quantity INT default 1 not null,
+    quantity INT DEFAULT 1 NOT NULL,
     cost NUMERIC(10,2),
     PRIMARY KEY (Bill_id, product_name)
 );
-create table buys1(
-	Bill_id SERIAL primary key references Buys(Bill_id),
+CREATE TABLE Buys (
+    Bill_id SERIAL PRIMARY KEY,
     B_id INT REFERENCES Buyer(B_id),
-    date DATE default current_date(),
-    time TIME default current_time()
+    buy_date DATE DEFAULT CURRENT_DATE,
+    buy_time TIME DEFAULT CURRENT_TIME
 );
 
-CREATE TABLE Sells (
-    Bill_id SERIAL,
+
+CREATE TABLE Sells_Items (
+    Bill_id INT REFERENCES Sells(Bill_id),
     material_name VARCHAR(100) REFERENCES Materials(material_name),
-    quantity INT default 1 not null,
+    quantity INT DEFAULT 1 NOT NULL,
     cost NUMERIC(10,2),
     PRIMARY KEY (Bill_id, material_name)
 );
-create table Sells1(
-	Bill_id SERIAL primary key references Sells(Bill_id),
+CREATE TABLE Sells (
+    Bill_id SERIAL PRIMARY KEY,
     S_id INT REFERENCES Supplier(S_id),
-    date DATE default current_date(),
-    time TIME default current_time()
+    sell_date DATE DEFAULT CURRENT_DATE,
+    sell_time TIME DEFAULT CURRENT_TIME
 );
 
 CREATE TABLE Input (
@@ -90,9 +91,9 @@ CREATE TABLE Input (
     material_name VARCHAR(100) REFERENCES Materials(material_name),
     quantity INT default 1,
     unit unittype NOT NUll,
-    date DATE default  current_date(),
-    time TIME default  current_time(),
-    PRIMARY KEY (D_id, material_name, date, time)
+    input_date DATE default CURRENT_DATE, 
+    input_time TIME default CURRENT_TIME, 
+    PRIMARY KEY (D_id, material_name, input_date, input_time)
 );
 
 CREATE TABLE Output (
@@ -100,8 +101,7 @@ CREATE TABLE Output (
     product_name VARCHAR(100) REFERENCES Product(product_name),
     quantity INT default 1,
     unit unittype NOT NUll,
-    date DATE default  current_date(),
-    time TIME default  current_time(),
-    PRIMARY KEY (D_id, product_name, date, time)
+    output_date DATE default CURRENT_DATE,
+    output_time TIME default CURRENT_TIME,
+    PRIMARY KEY (D_id, product_name, output_date, output_time)
 );
-

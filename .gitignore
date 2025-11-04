@@ -1,0 +1,7 @@
+/node_modules
+/src/js/dbConfig.js
+# System files
+.DS_Store
+
+# IDE-specific folders
+.idea/

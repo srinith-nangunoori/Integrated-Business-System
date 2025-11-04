@@ -1,0 +1,28 @@
+{
+  "name": "dbms_project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+  "start": "electron .",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srinith-nangunoori/Integrated-Business-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/srinith-nangunoori/Integrated-Business-System/issues"
+  },
+  "homepage": "https://github.com/srinith-nangunoori/Integrated-Business-System#readme",
+  "devDependencies": {
+    "electron": "^39.0.0"
+  },
+  "dependencies": {
+    "oracledb": "^6.10.0"
+  }
+}

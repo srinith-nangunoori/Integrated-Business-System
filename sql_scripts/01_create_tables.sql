@@ -17,16 +17,19 @@ CREATE TABLE Supplier (
 );
 
 CREATE TYPE unittype AS ENUM('k.g','liter');
+-- In 01_create_tables.sql, find and update the Product table
 CREATE TABLE Product (
     product_name VARCHAR(100) PRIMARY KEY,
     stock INT DEFAULT 0,
-    unit unittype NOT NULL
+    unit unittype NOT NULL,
+    CONSTRAINT stock_non_negative CHECK (stock >= 0)
 );
 
 CREATE TABLE Materials (
     material_name VARCHAR(100) PRIMARY KEY,
     stock INT DEFAULT 0,
-    unit unittype NOT NULL
+    unit unittype NOT NULL,
+    CONSTRAINT stock_non_negative CHECK (stock >= 0)
 );
 
 CREATE TABLE Department (
@@ -57,13 +60,6 @@ CREATE TABLE Works(
     PRIMARY KEY (E_id, D_id, work_date)
 );
 
-CREATE TABLE Buys_Items (
-    Bill_id INT REFERENCES Buys(Bill_id),
-    product_name VARCHAR(100) REFERENCES Product(product_name),
-    quantity INT DEFAULT 1 NOT NULL,
-    cost NUMERIC(10,2),
-    PRIMARY KEY (Bill_id, product_name)
-);
 CREATE TABLE Buys (
     Bill_id SERIAL PRIMARY KEY,
     B_id INT REFERENCES Buyer(B_id),
@@ -71,6 +67,20 @@ CREATE TABLE Buys (
     buy_time TIME DEFAULT CURRENT_TIME
 );
 
+CREATE TABLE Buys_Items (
+    Bill_id INT REFERENCES Buys(Bill_id),
+    product_name VARCHAR(100) REFERENCES Product(product_name),
+    quantity INT DEFAULT 1 NOT NULL,
+    cost NUMERIC(10,2),
+    PRIMARY KEY (Bill_id, product_name)
+);
+
+CREATE TABLE Sells (
+    Bill_id SERIAL PRIMARY KEY,
+    S_id INT REFERENCES Supplier(S_id),
+    sell_date DATE DEFAULT CURRENT_DATE,
+    sell_time TIME DEFAULT CURRENT_TIME
+);
 
 CREATE TABLE Sells_Items (
     Bill_id INT REFERENCES Sells(Bill_id),
@@ -78,12 +88,6 @@ CREATE TABLE Sells_Items (
     quantity INT DEFAULT 1 NOT NULL,
     cost NUMERIC(10,2),
     PRIMARY KEY (Bill_id, material_name)
-);
-CREATE TABLE Sells (
-    Bill_id SERIAL PRIMARY KEY,
-    S_id INT REFERENCES Supplier(S_id),
-    sell_date DATE DEFAULT CURRENT_DATE,
-    sell_time TIME DEFAULT CURRENT_TIME
 );
 
 CREATE TABLE Input (

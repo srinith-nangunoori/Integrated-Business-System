@@ -388,14 +388,58 @@ async function deleteDepartment(id) {
     } catch (error) { return { success: false, error: `Failed to delete department ${id}.` }; }
 }
 
-async function createSellTransaction(supplierId, items) {
-  const client = await connectWithRetry(); // Get a single client for the entire transaction
+// async function createSellTransaction(supplierId, items) {
+//   const client = await connectWithRetry(); // Get a single client for the entire transaction
 
+//   try {
+//     // Start a transaction
+//     await client.query('BEGIN');
+
+//     // 1. Create a record in the main Sells table to get a new Bill_id
+//     const sellsQuery = {
+//       text: 'INSERT INTO Sells (S_id) VALUES ($1) RETURNING Bill_id',
+//       values: [supplierId],
+//     };
+//     const sellsResult = await client.query(sellsQuery);
+//     const newBillId = sellsResult.rows[0].bill_id;
+
+//     // 2. Loop through the items and insert them into Sells_Items
+//     for (const item of items) {
+//       const itemsQuery = {
+//         text: 'INSERT INTO Sells_Items (Bill_id, material_name, quantity, cost) VALUES ($1, $2, $3, $4)',
+//         values: [newBillId, item.material_name, item.quantity, item.cost],
+//       };
+//       await client.query(itemsQuery);
+      
+//       // 3. Update the stock for each material
+//       const updateStockQuery = {
+//           text: 'UPDATE Materials SET stock = stock + $1 WHERE material_name = $2',
+//           values: [item.quantity, item.material_name]
+//       };
+//       await client.query(updateStockQuery);
+//     }
+
+//     // If all queries succeeded, commit the transaction
+//     await client.query('COMMIT');
+//     console.log(`Successfully created Sell Transaction with Bill_id: ${newBillId}`);
+//     return { success: true, billId: newBillId };
+
+//   } catch (error) {
+//     // If any query fails, roll back the entire transaction
+//     await client.query('ROLLBACK');
+//     console.error('Error in createSellTransaction, transaction rolled back:', error);
+//     return { success: false, error: 'Failed to create transaction.' };
+//   } finally {
+//     // ALWAYS release the client back to the pool
+//     client.release();
+//   }
+// }
+
+async function createSellTransaction(supplierId, items) {
+  const client = await connectWithRetry();
   try {
-    // Start a transaction
     await client.query('BEGIN');
 
-    // 1. Create a record in the main Sells table to get a new Bill_id
     const sellsQuery = {
       text: 'INSERT INTO Sells (S_id) VALUES ($1) RETURNING Bill_id',
       values: [supplierId],
@@ -403,70 +447,99 @@ async function createSellTransaction(supplierId, items) {
     const sellsResult = await client.query(sellsQuery);
     const newBillId = sellsResult.rows[0].bill_id;
 
-    // 2. Loop through the items and insert them into Sells_Items
     for (const item of items) {
       const itemsQuery = {
         text: 'INSERT INTO Sells_Items (Bill_id, material_name, quantity, cost) VALUES ($1, $2, $3, $4)',
         values: [newBillId, item.material_name, item.quantity, item.cost],
       };
       await client.query(itemsQuery);
-      
-      // 3. Update the stock for each material
-      const updateStockQuery = {
-          text: 'UPDATE Materials SET stock = stock + $1 WHERE material_name = $2',
-          values: [item.quantity, item.material_name]
-      };
-      await client.query(updateStockQuery);
+      // THE 'UPDATE Materials' LINE IS GONE! THE TRIGGER DOES THE WORK.
     }
 
-    // If all queries succeeded, commit the transaction
     await client.query('COMMIT');
     console.log(`Successfully created Sell Transaction with Bill_id: ${newBillId}`);
     return { success: true, billId: newBillId };
 
   } catch (error) {
-    // If any query fails, roll back the entire transaction
     await client.query('ROLLBACK');
     console.error('Error in createSellTransaction, transaction rolled back:', error);
     return { success: false, error: 'Failed to create transaction.' };
   } finally {
-    // ALWAYS release the client back to the pool
     client.release();
   }
 }
 
-async function createBuyTransaction(buyerId, items) {
-  const client = await connectWithRetry();
-  try {
-    await client.query('BEGIN');
+// async function createBuyTransaction(buyerId, items) {
+//   const client = await connectWithRetry();
+//   try {
+//     await client.query('BEGIN');
     
-    // 1. Create a record in the Buys table
-    const buysQuery = { text: 'INSERT INTO Buys (B_id) VALUES ($1) RETURNING Bill_id', values: [buyerId] };
-    const buysResult = await client.query(buysQuery);
-    const newBillId = buysResult.rows[0].bill_id;
+//     // 1. Create a record in the Buys table
+//     const buysQuery = { text: 'INSERT INTO Buys (B_id) VALUES ($1) RETURNING Bill_id', values: [buyerId] };
+//     const buysResult = await client.query(buysQuery);
+//     const newBillId = buysResult.rows[0].bill_id;
 
-    // 2. Loop through items, insert into Buys_Items, and update Product stock
-    for (const item of items) {
-      const itemsQuery = { text: 'INSERT INTO Buys_Items (Bill_id, product_name, quantity, cost) VALUES ($1, $2, $3, $4)', values: [newBillId, item.product_name, item.quantity, item.cost] };
-      await client.query(itemsQuery);
+//     // 2. Loop through items, insert into Buys_Items, and update Product stock
+//     for (const item of items) {
+//       const itemsQuery = { text: 'INSERT INTO Buys_Items (Bill_id, product_name, quantity, cost) VALUES ($1, $2, $3, $4)', values: [newBillId, item.product_name, item.quantity, item.cost] };
+//       await client.query(itemsQuery);
       
-      // 3. DECREASE the stock for each product sold
-      const updateStockQuery = { text: 'UPDATE Product SET stock = stock - $1 WHERE product_name = $2', values: [item.quantity, item.product_name] };
-      await client.query(updateStockQuery);
-    }
+//       // 3. DECREASE the stock for each product sold
+//       const updateStockQuery = { text: 'UPDATE Product SET stock = stock - $1 WHERE product_name = $2', values: [item.quantity, item.product_name] };
+//       await client.query(updateStockQuery);
+//     }
 
+//     await client.query('COMMIT');
+//     console.log(`Successfully created Buy Transaction with Bill_id: ${newBillId}`);
+//     return { success: true, billId: newBillId };
+//   } catch (error) {
+//     await client.query('ROLLBACK');
+//     console.error('Error in createBuyTransaction, transaction rolled back:', error);
+//     return { success: false, error: 'Failed to create transaction.' };
+//   } finally {
+//     client.release();
+//   }
+// }
+
+async function createBuyTransaction(buyerId, items) {
+  // We will call the procedure for each item in the cart.
+  // In a real-world scenario with a shopping cart, the procedure would be
+  // designed to accept an array of items, but for this project, this is perfect.
+  const client = await connectWithRetry();
+  let newBillId = null;
+
+  try {
+    // We still manage the transaction here so all items succeed or fail together.
+    await client.query('BEGIN');
+
+    for (const item of items) {
+      // For the first item, we let the procedure create the bill.
+      // For subsequent items, we pass the bill_id so they are added to the same bill.
+      const query = {
+        text: 'CALL process_new_sale($1, $2, $3, $4, $5)',
+        values: [buyerId, item.product_name, item.quantity, item.cost, newBillId],
+      };
+      const result = await client.query(query);
+      
+      // The procedure returns the new bill_id in the first call
+      if (result.rows && result.rows[0].p_bill_id && !newBillId) {
+          newBillId = result.rows[0].p_bill_id;
+      }
+    }
+    
     await client.query('COMMIT');
-    console.log(`Successfully created Buy Transaction with Bill_id: ${newBillId}`);
+    console.log(`Successfully processed Buy Transaction with Bill_id: ${newBillId}`);
     return { success: true, billId: newBillId };
+
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error in createBuyTransaction, transaction rolled back:', error);
-    return { success: false, error: 'Failed to create transaction.' };
+    // The error message will come from our 'RAISE EXCEPTION' in the procedure!
+    console.error('Error in createBuyTransaction, transaction rolled back:', error.message);
+    return { success: false, error: error.message };
   } finally {
     client.release();
   }
 }
-
 
 async function createProductionTransaction(departmentId, inputs, outputs) {
   const client = await connectWithRetry();
@@ -630,6 +703,18 @@ async function getTransactionHistory(filters = {}) {
     }
 }
 
+// ADD THIS NEW FUNCTION TO DEMONSTRATE THE CURSOR
+async function applyRaiseToRole(role, percentage) {
+  try {
+    const client = await connectWithRetry();
+    await client.query('CALL give_raise_by_role($1, $2)', [role, percentage]);
+    client.release();
+    return { success: true, message: `Raise applied to all employees with role: ${role}` };
+  } catch (error) {
+    console.error('Error applying raise:', error);
+    return { success: false, error: error.message };
+  }
+}
 
 module.exports = {
   testConnection,
@@ -650,5 +735,7 @@ module.exports = {
   createSellTransaction , createBuyTransaction ,
   createProductionTransaction ,
 
-  getDashboardStats,getRecentActivity,getTransactionHistory
+  getDashboardStats,getRecentActivity,getTransactionHistory,
+
+  applyRaiseToRole 
 };

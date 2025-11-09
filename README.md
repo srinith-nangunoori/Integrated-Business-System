@@ -43,10 +43,10 @@ This application provides a rich user experience with full CRUD (Create, Read, U
 ---
 
 ## Database Schema (ER Diagram)
-<img src="Relational_Model_img.jpg" alt="ER Diagram Image" width=100%>
+<img src="ER_Diagram_img.jpg" alt="ER Diagram Image" width=100%>
 
 ## Database Schema (Relational Diagram after Normalization)
-<img src="ER_Diagram_img.jpg" alt="Relational Model Image" width=100%>
+<img src="Relational_Model_img.jpg" alt="Relational Model Image" width=100%>
 
 
 
